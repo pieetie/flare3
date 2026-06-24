@@ -104,7 +104,6 @@ nav a {
   border: 1px solid transparent;
   border-bottom: none;
   border-radius: var(--radius) var(--radius) 0 0;
-  margin-bottom: -1px;
   transition: color .15s ease, background .15s ease;
 }
 nav a:hover { color: var(--text); background: var(--surface); }
@@ -114,6 +113,7 @@ nav a.active {
   background: var(--bg);
   border-color: var(--border);
   border-bottom: 1px solid var(--bg);
+  margin-bottom: -1px;
 }
 
 h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
