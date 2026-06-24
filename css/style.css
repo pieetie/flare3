@@ -1,1 +1,42 @@
-/**/
+body {
+  font-family: system-ui, sans-serif;
+  margin: 2rem auto;
+  max-width: 720px;
+  padding: 0 1rem;
+  color: #1a1a1a;
+}
+h1 { font-size: 1.4rem; }
+h2 { font-size: 1rem; margin-top: 1.5rem; }
+#status { color: #666; font-size: .9rem; }
+
+form { display: grid; gap: .75rem; margin: 1rem 0; }
+label { display: grid; gap: .25rem; font-size: .9rem; }
+label.thr { max-width: 12rem; }
+textarea, input {
+  font-family: ui-monospace, monospace;
+  font-size: .9rem;
+  padding: .4rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+button {
+  justify-self: start;
+  padding: .5rem 1rem;
+  border: 0;
+  border-radius: 4px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+button:disabled { background: #aaa; cursor: not-allowed; }
+
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .85rem; }
+th, td { border: 1px solid #ddd; padding: .35rem .5rem; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+td.seq { font-family: ui-monospace, monospace; text-align: left; }
+
+.fail { background: #fde2e1; color: #b91c1c; font-weight: 600; }
+.verdict { padding: .6rem .8rem; border-radius: 4px; font-weight: 600; }
+.verdict.ok { background: #dcfce7; color: #166534; }
+.verdict.ko { background: #fde2e1; color: #b91c1c; }
+.err { color: #b91c1c; }

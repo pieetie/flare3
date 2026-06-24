@@ -9,7 +9,26 @@
 <body>
   <main>
     <h1>flare3</h1>
+    <p id="status">Initializing…</p>
+
+    <form id="form">
+      <label>Left primer
+        <textarea id="left" rows="2" spellcheck="false"></textarea>
+      </label>
+      <label>Right primer
+        <textarea id="right" rows="2" spellcheck="false"></textarea>
+      </label>
+      <label>Probe
+        <textarea id="probe" rows="2" spellcheck="false"></textarea>
+      </label>
+      <input id="threshold" type="hidden" value="-4">
+      <button id="run" type="submit" disabled>Analyze</button>
+    </form>
+
+    <div id="results"></div>
   </main>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v314.0.0/full/pyodide.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
