@@ -89,22 +89,32 @@ main { flex: 1; min-width: 0; max-width: 660px; }
 
 nav {
   display: flex;
-  gap: 1.75rem;
-  align-items: baseline;
-  padding-bottom: 1.25rem;
+  gap: .25rem;
+  align-items: flex-end;
   margin-bottom: 2rem;
   border-bottom: 1px solid var(--border);
 }
 nav a {
-  font-size: .95rem;
+  padding: .5rem .95rem;
+  font-size: .9rem;
   font-weight: 500;
   text-decoration: none;
   color: var(--muted);
   letter-spacing: -0.01em;
-  transition: color .15s ease;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  margin-bottom: -1px;
+  transition: color .15s ease, background .15s ease;
 }
-nav a:hover { color: var(--text); }
-nav a.active { color: var(--text); font-weight: 600; }
+nav a:hover { color: var(--text); background: var(--surface); }
+nav a.active {
+  color: var(--text);
+  font-weight: 600;
+  background: var(--bg);
+  border-color: var(--border);
+  border-bottom: 1px solid var(--bg);
+}
 
 h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
 h2 {
