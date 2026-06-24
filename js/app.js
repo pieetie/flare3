@@ -39,7 +39,7 @@ def _run(left, right, probe):
     runAssay = pyodide.globals.get("_run");
 
     runBtn.disabled = false;
-    statusEl.textContent = "Ready.";
+    statusEl.textContent = "";
   } catch (e) {
     statusEl.textContent = "Error: " + e.message;
   }
