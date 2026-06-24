@@ -129,7 +129,7 @@ label {
 label.thr { max-width: 12rem; }
 
 textarea, input {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-family: inherit;
   font-size: .9rem;
   padding: .6rem .7rem;
   color: var(--text);
@@ -217,7 +217,7 @@ th {
   letter-spacing: -0.01em;
 }
 th:first-child, td:first-child { text-align: left; }
-td.seq { font-family: ui-monospace, "SF Mono", Menlo, monospace; text-align: left; }
+td.seq { font-family: inherit; text-align: left; }
 
 .fail { background: var(--ko-bg); color: var(--ko-text); font-weight: 600; }
 
