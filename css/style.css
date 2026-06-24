@@ -5,6 +5,23 @@ body {
   padding: 0 1rem;
   color: #1a1a1a;
 }
+nav {
+  display: flex;
+  gap: 1.5rem;
+  align-items: baseline;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+nav a {
+  font-size: .95rem;
+  text-decoration: none;
+  color: #999;
+  letter-spacing: .02em;
+}
+nav a:hover { color: #1a1a1a; }
+nav a.active { color: #1a1a1a; font-weight: 600; }
+
 h1 { font-size: 1.4rem; }
 h2 { font-size: 1rem; margin-top: 1.5rem; }
 #status { color: #666; font-size: .9rem; }
