@@ -4,6 +4,19 @@ const resultsEl = document.getElementById("results");
 
 let runAssay = null;
 
+// Persist inputs across page navigation
+function persistInputs(ids) {
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const key = "flare3:" + id;
+    const saved = localStorage.getItem(key);
+    if (saved !== null) el.value = saved;
+    el.addEventListener("input", () => localStorage.setItem(key, el.value));
+  }
+}
+persistInputs(["left", "right", "probe"]);
+
 async function init() {
   try {
     statusEl.textContent = "Loading Pyodide…";
