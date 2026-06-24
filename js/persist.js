@@ -13,6 +13,9 @@
     }
   }
 
+  // Exposed so the router can re-wire fields after injecting a page fragment.
+  window.flarePersist = wire;
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", wire);
   } else {

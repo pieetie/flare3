@@ -21,7 +21,7 @@
         "</a>";
     }
     rail.innerHTML = html;
-    document.body.appendChild(rail);
+    (document.querySelector(".layout") || document.body).appendChild(rail);
   }
 
   if (document.readyState === "loading") {

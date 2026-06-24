@@ -20,19 +20,23 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-  display: flex;
-  align-items: flex-start;
-  gap: 3rem;
   max-width: 1000px;
   margin: 0 auto;
-  padding: 3rem 1.25rem 4rem;
+  padding: 2.5rem 1.25rem 4rem;
   color: var(--text);
   background: var(--bg);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
+.layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 3rem;
+}
+
 main { flex: 1; min-width: 0; max-width: 660px; }
+.page-intro { color: var(--muted); font-size: .85rem; margin-bottom: 1.75rem; }
 
 .rail {
   flex: 0 0 220px;
@@ -76,7 +80,7 @@ main { flex: 1; min-width: 0; max-width: 660px; }
 .rail-link:hover svg { color: var(--text); }
 
 @media (max-width: 760px) {
-  body { flex-direction: column; gap: 1.75rem; }
+  .layout { flex-direction: column; gap: 1.75rem; }
   .rail {
     position: static;
     flex: none;
