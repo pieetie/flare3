@@ -20,13 +20,71 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  display: flex;
+  align-items: flex-start;
+  gap: 3rem;
+  max-width: 1000px;
   margin: 0 auto;
-  max-width: 680px;
   padding: 3rem 1.25rem 4rem;
   color: var(--text);
   background: var(--bg);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+main { flex: 1; min-width: 0; max-width: 660px; }
+
+.rail {
+  flex: 0 0 220px;
+  position: sticky;
+  top: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.rail-title {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: .25rem;
+}
+.rail-title svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.rail-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .55rem .75rem;
+  font-size: .85rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: background .15s ease, border-color .15s ease;
+}
+.rail-link span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rail-link svg { width: 16px; height: 16px; flex: 0 0 auto; color: var(--muted); }
+.rail svg * { stroke: currentColor; }
+.rail-link:hover { background: #ececef; border-color: var(--border-strong); }
+.rail-link:hover svg { color: var(--text); }
+
+@media (max-width: 760px) {
+  body { flex-direction: column; gap: 1.75rem; }
+  .rail {
+    position: static;
+    flex: none;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .rail-title { width: 100%; }
 }
 
 nav {
