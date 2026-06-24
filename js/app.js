@@ -121,4 +121,13 @@ document.getElementById("form").addEventListener("submit", (ev) => {
   render(res, threshold);
 });
 
+document.getElementById("reset").addEventListener("click", () => {
+  for (const id of ["left", "right", "probe"]) {
+    const el = document.getElementById(id);
+    el.value = "";
+    el.dispatchEvent(new Event("input"));
+  }
+  resultsEl.innerHTML = "";
+});
+
 init();

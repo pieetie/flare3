@@ -25,7 +25,10 @@
         <textarea id="probe" rows="1" spellcheck="false"></textarea>
       </label>
       <input id="threshold" type="hidden" value="-4">
-      <button id="run" type="submit" disabled>Analyze</button>
+      <div class="actions">
+        <button id="run" type="submit" disabled>Analyze</button>
+        <button id="reset" type="button" class="btn-secondary">Reset</button>
+      </div>
     </form>
 
     <div id="results"></div>
