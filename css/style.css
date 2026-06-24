@@ -130,8 +130,9 @@ h2 {
   margin: 2rem 0 .75rem;
 }
 #status { color: var(--muted); font-size: .85rem; margin-bottom: 1.75rem; }
+#status:empty { display: none; }
 
-form { display: grid; gap: 1.1rem; margin: 1rem 0 2rem; }
+form { display: grid; gap: 1.1rem; margin: 0 0 2rem; }
 label {
   display: grid;
   gap: .4rem;
