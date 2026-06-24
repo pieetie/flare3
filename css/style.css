@@ -36,6 +36,11 @@ textarea, input {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+#left, #right, #probe {
+  resize: none;
+  white-space: nowrap;
+  overflow-x: auto;
+}
 button {
   justify-self: start;
   padding: .5rem 1rem;
