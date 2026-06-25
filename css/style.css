@@ -91,6 +91,37 @@ main { flex: 1; min-width: 0; max-width: 660px; }
   .rail-title { width: 100%; }
 }
 
+.brandbar {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin-bottom: 1.75rem;
+}
+.brandbar .gh {
+  display: inline-flex;
+  color: var(--text);
+  opacity: .85;
+  transition: opacity .15s ease;
+}
+.brandbar .gh:hover { opacity: 1; }
+.brandbar .gh svg { display: block; fill: currentColor; }
+.brand {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.chip {
+  font-size: .68rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .08rem .5rem;
+  letter-spacing: .01em;
+}
+
 nav {
   display: flex;
   gap: .25rem;
