@@ -20,6 +20,7 @@
 
     if (window.flarePersist) window.flarePersist();
     if (route === "flare" && window.FLARE) window.FLARE.mount();
+    if (route === "multiplex" && window.MULTIPLEX) window.MULTIPLEX.mount();
   }
 
   window.addEventListener("hashchange", render);
