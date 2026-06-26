@@ -1,0 +1,23 @@
+<div id="flare-page">
+  <p class="page-intro">Oligo thermodynamics (TaqMan)</p>
+  <p id="status">Initializing…</p>
+
+  <form id="form">
+    <label>Left primer
+      <textarea id="left" rows="1" spellcheck="false"></textarea>
+    </label>
+    <label>Right primer
+      <textarea id="right" rows="1" spellcheck="false"></textarea>
+    </label>
+    <label>Probe
+      <textarea id="probe" rows="1" spellcheck="false"></textarea>
+    </label>
+    <input id="threshold" type="hidden" value="-4">
+    <div class="actions">
+      <button id="run" type="submit" disabled>Analyze</button>
+      <button id="reset" type="button" class="btn-secondary">Reset</button>
+    </div>
+  </form>
+
+  <div id="results"></div>
+</div>

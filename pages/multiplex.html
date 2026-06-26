@@ -1,0 +1,34 @@
+<div id="multiplex-page">
+  <p class="page-intro">Cross-dimer analysis across all oligo pairs</p>
+
+  <form id="mux-form">
+    <label>Oligos (one per line: name sequence, e.g. Seq1.1 ACGT…)
+      <textarea id="seqs" rows="10" spellcheck="false"></textarea>
+    </label>
+    <div class="thresholds">
+      <div class="thr-group">
+        <label class="thr">
+          <span>Mid</span>
+          <input id="thr-mid" type="number" step="0.1" value="-4">
+        </label>
+        <label class="thr">
+          <span>3′ end</span>
+          <input id="thr-end" type="number" step="0.1" value="-4">
+        </label>
+      </div>
+      <div class="thr-group">
+        <label class="thr">
+          <span>Group</span>
+          <input id="grp-size" type="number" step="1" min="2" value="5">
+        </label>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="mux-run" type="button">Cross ΔG matrix</button>
+      <button id="mux-group" type="button" class="btn-secondary">Build groups</button>
+      <button id="grp-avoid" type="button" class="toggle" aria-pressed="false">Avoid redesign</button>
+    </div>
+  </form>
+
+  <div id="mux-results"></div>
+</div>

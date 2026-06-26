@@ -1,0 +1,3 @@
+[submodule "flare"]
+	path = flare
+	url = https://github.com/pieetie/flare.git
