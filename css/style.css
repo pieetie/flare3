@@ -296,8 +296,22 @@ td.seq { font-family: inherit; text-align: left; }
 .thresholds .thr { max-width: 11rem; }
 .thresholds input { width: 5rem; }
 
-.fail-list { margin: .25rem 0 0; padding-left: 1.1rem; font-size: .85rem; }
-.fail-list li { margin: .12rem 0; }
+.fail-list { margin: .25rem 0 0; padding-left: 0; list-style: none; font-size: .85rem; }
+.fail-item { margin: .12rem 0; }
+.fail-head { cursor: pointer; user-select: none; display: flex; align-items: center; gap: .4rem; }
+.fail-head .tri {
+  display: inline-block; width: 0; height: 0;
+  border-left: 5px solid var(--muted); border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  transition: transform .12s ease; flex: 0 0 auto;
+}
+.fail-item.open .fail-head .tri { transform: rotate(90deg); }
+.fail-struct {
+  display: none; margin: .35rem 0 .6rem 1.1rem;
+  padding: .6rem .75rem; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: .8rem; line-height: 1.35; white-space: pre; overflow-x: auto;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.fail-item.open .fail-struct { display: block; }
 
 h2 .icon-btn {
   width: 1.6rem; height: 1.6rem; vertical-align: middle; margin-left: .25rem;
