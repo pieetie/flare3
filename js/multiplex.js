@@ -172,29 +172,65 @@ window.MULTIPLEX = (function () {
     return { svList, conf, worst };
   }
 
-  function packGroups(m, conf, size) {
+  function degrees(m, conf) {
+    const d = new Array(m).fill(0);
+    for (let i = 0; i < m; i++) for (let j = 0; j < m; j++) if (conf[i][j]) d[i]++;
+    return d;
+  }
+  // place s into the most-filled compatible non-full bin; -1 if none
+  function fitBin(bins, conf, s, size) {
+    let cand = -1, fill = -1;
+    for (let b = 0; b < bins.length; b++) {
+      if (bins[b].length >= size || bins[b].some((q) => conf[s][q])) continue;
+      if (bins[b].length > fill) { fill = bins[b].length; cand = b; }
+    }
+    return cand;
+  }
+
+  // A group "passes" as long as it holds no failing cross-dimer 
+  // Mode A : fixed K = ceil(m/size) groups, maximize placed, drop the rest
+  function packFixed(m, conf, size) {
+    const K = Math.max(1, Math.ceil(m / size));
+    const deg = degrees(m, conf);
+    const byHard = [...Array(m).keys()].sort((a, b) => deg[b] - deg[a]);
     const rnd = mulberry32(12345);
-    const base = [...Array(m).keys()];
-    let best = { groups: [] };
-    for (let r = 0; r < 4000; r++) {
-      const order = r === 0 ? base.slice() : shuffle(base.slice(), rnd);
-      const avail = new Set(order);
-      const groups = [];
-      while (true) {
-        const g = [];
-        for (const s of order) {
-          if (avail.has(s) && g.every((q) => !conf[s][q])) {
-            g.push(s);
-            if (g.length === size) break;
-          }
-        }
-        if (g.length === size) { groups.push(g); g.forEach((s) => avail.delete(s)); }
-        else break;
+    let best = null;
+    for (let r = 0; r < 3000; r++) {
+      const order = r === 0 ? byHard.slice() : shuffle([...Array(m).keys()], rnd);
+      const bins = Array.from({ length: K }, () => []);
+      let placed = 0;
+      for (const s of order) {
+        const b = fitBin(bins, conf, s, size);
+        if (b >= 0) { bins[b].push(s); placed++; }
       }
-      if (groups.length > best.groups.length) best = { groups };
+      const nonEmpty = bins.filter((b) => b.length).length;
+      if (!best || placed > best.placed || (placed === best.placed && nonEmpty < best.nonEmpty)) {
+        best = { placed, nonEmpty, groups: bins.filter((b) => b.length).map((b) => b.slice()) };
+      }
+      if (best.placed === m) break;
     }
     const used = new Set(best.groups.flat());
-    best.dropped = base.filter((i) => !used.has(i));
+    best.dropped = [...Array(m).keys()].filter((i) => !used.has(i));
+    return best;
+  }
+
+  // Mode B : place everyone, minimize the number of groups (extra reactions ok)
+  function packGrowing(m, conf, size) {
+    const deg = degrees(m, conf);
+    const byHard = [...Array(m).keys()].sort((a, b) => deg[b] - deg[a]);
+    const rnd = mulberry32(12345);
+    let best = null;
+    for (let r = 0; r < 3000; r++) {
+      const order = r === 0 ? byHard.slice() : shuffle([...Array(m).keys()], rnd);
+      const bins = [];
+      for (const s of order) {
+        const b = fitBin(bins, conf, s, size);
+        if (b >= 0) bins[b].push(s);
+        else bins.push([s]);
+      }
+      if (!best || bins.length < best.groups.length) best = { groups: bins.map((b) => b.slice()) };
+    }
+    best.dropped = [];
     return best;
   }
 
@@ -208,11 +244,15 @@ window.MULTIPLEX = (function () {
       out.innerHTML = '<p class="err">Need at least 2 named groups (e.g. Seq1.1, Seq2.1).</p>';
       return;
     }
-    const sol = packGroups(svList.length, conf, size);
+    const avoidEl = document.getElementById("grp-avoid");
+    const avoid = avoidEl && avoidEl.checked;
+    const sol = avoid ? packGrowing(svList.length, conf, size)
+                      : packFixed(svList.length, conf, size);
+    const placed = svList.length - sol.dropped.length;
 
-    let html = `<h2>Groups of ${size}</h2>`;
+    let html = `<h2>Groups (≤ ${size})</h2>`;
     html += `<p class="muted">${sol.groups.length} group${sol.groups.length === 1 ? "" : "s"}` +
-      ` (${sol.groups.length * size}/${svList.length} placed` +
+      ` (${placed}/${svList.length} placed` +
       (sol.dropped.length ? `, ${sol.dropped.length} to redesign).</p>` : ").</p>");
 
     sol.groups.forEach((g, gi) => {
@@ -244,7 +284,7 @@ window.MULTIPLEX = (function () {
         html += `<div class="group"><div class="group-h">${esc(sv)} ` +
           `<span class="muted">clashes with ${clashes.length}</span></div>`;
         html += '<ul class="group-dimers">' + clashes.slice(0, 8).map((c) =>
-          `<li>${esc(sv)} / ${esc(c.other)} — ${esc(c.rec.a)} ↔ ${esc(c.rec.b)} ` +
+          `<li>${esc(sv)} / ${esc(c.other)} - ${esc(c.rec.a)} ↔ ${esc(c.rec.b)} ` +
           `<span class="dimer-dg">ΔG ${c.rec.p.dg.toFixed(1)}</span></li>`).join("") + "</ul></div>";
       }
     }
@@ -302,6 +342,8 @@ window.MULTIPLEX = (function () {
       el.addEventListener("change", rerender);
       attachScrub(el);
     }
+    const av = document.getElementById("grp-avoid");
+    if (av) av.addEventListener("change", rerender);
   }
 
   function attachScrub(el) {
