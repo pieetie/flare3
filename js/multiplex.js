@@ -22,6 +22,11 @@ window.MULTIPLEX = (function () {
   function fails(p, tMid, tEnd) {
     return (p.end < 0 && p.end <= tEnd) || (p.mid < 0 && p.mid <= tMid);
   }
+  function svOf(name) {
+    return name.includes(".") ? name.slice(0, name.lastIndexOf(".")) : name;
+  }
+  function svNum(s) { const m = s.match(/(\d+)/); return m ? +m[1] : 0; }
+  function oligoNum(s) { const m = s.match(/\.(\d+)/); return m ? +m[1] : 0; }
 
   function toCSV(oligos, M) {
     const names = oligos.map((o) => o.name);
@@ -43,20 +48,48 @@ window.MULTIPLEX = (function () {
 
     const bad = [];
     for (let i = 0; i < n; i++)
-      for (let j = i + 1; j < n; j++)
+      for (let j = i + 1; j < n; j++) {
+        if (svOf(oligos[i].name) === svOf(oligos[j].name)) continue;
         if (fails(M[i][j], tMid, tEnd))
           bad.push({ a: oligos[i].name, b: oligos[j].name, p: M[i][j] });
+      }
     bad.sort((x, y) => x.p.dg - y.p.dg);
 
     let html = `<h2>Failing cross-dimers (mid ≤ ${tMid}, 3' end ≤ ${tEnd})</h2>`;
     if (bad.length) {
+      const tree = new Map();
+      const addEntry = (self, other, p) => {
+        const sv = svOf(self);
+        if (!tree.has(sv)) tree.set(sv, new Map());
+        const m = tree.get(sv);
+        if (!m.has(self)) m.set(self, []);
+        m.get(self).push({ other, p });
+      };
+      for (const x of bad) { addEntry(x.a, x.b, x.p); addEntry(x.b, x.a, x.p); }
+
+      const svs = [...tree.keys()].sort((p, q) => svNum(p) - svNum(q));
       html += `<p class="muted">${bad.length} pair${bad.length === 1 ? "" : "s"} above threshold.</p>`;
-      html += '<ul class="fail-list">' + bad.map((x) => {
-        const tag = (x.p.end < 0 && x.p.end <= tEnd) ? "3'" : "mid";
-        return `<li class="fail-item"><div class="fail-head"><span class="tri"></span>` +
-          `${esc(x.a)} - ${esc(x.b)} <span class="dimer-dg">(${x.p.dg.toFixed(1)}, ${tag})</span></div>` +
-          `<pre class="fail-struct">${esc(x.p.ascii || "")}</pre></li>`;
-      }).join("") + "</ul>";
+      html += '<ul class="tree">';
+      for (const sv of svs) {
+        const oligos = [...tree.get(sv).keys()].sort((p, q) => oligoNum(p) - oligoNum(q));
+        const svCount = oligos.reduce((s, o) => s + tree.get(sv).get(o).length, 0);
+        html += `<li class="node"><div class="node-head"><span class="tri"></span>${esc(sv)} ` +
+          `<span class="dimer-dg">${svCount}</span></div><ul class="node-body">`;
+        for (const ol of oligos) {
+          const pairs = tree.get(sv).get(ol).sort((p, q) => p.p.dg - q.p.dg);
+          html += `<li class="node"><div class="node-head"><span class="tri"></span>${esc(ol)} ` +
+            `<span class="dimer-dg">${pairs.length}</span></div><ul class="node-body">`;
+          for (const { other, p } of pairs) {
+            const tag = (p.end < 0 && p.end <= tEnd) ? "3'" : "mid";
+            html += `<li class="node"><div class="node-head"><span class="tri"></span>` +
+              `${esc(ol)} - ${esc(other)} <span class="dimer-dg">(${p.dg.toFixed(1)}, ${tag})</span></div>` +
+              `<pre class="fail-struct">${esc(p.ascii || "")}</pre></li>`;
+          }
+          html += "</ul></li>";
+        }
+        html += "</ul></li>";
+      }
+      html += "</ul>";
     } else {
       html += '<p class="muted">None above threshold.</p>';
     }
@@ -78,8 +111,11 @@ window.MULTIPLEX = (function () {
     html += "</tbody></table></div>";
     out.innerHTML = html;
 
-    for (const head of out.querySelectorAll(".fail-item .fail-head")) {
-      head.addEventListener("click", () => head.parentElement.classList.toggle("open"));
+    for (const head of out.querySelectorAll(".tree .node-head")) {
+      head.addEventListener("click", (e) => {
+        e.stopPropagation();
+        head.parentElement.classList.toggle("open");
+      });
     }
     const dl = document.getElementById("mux-dl");
     if (dl) dl.addEventListener("click", () => {
