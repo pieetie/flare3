@@ -293,6 +293,8 @@ td.seq { font-family: inherit; text-align: left; }
 .dimer-dg.bad { color: var(--ko-text); opacity: 1; font-weight: 600; }
 
 .thresholds { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.toggle { display: inline-flex; align-items: center; gap: .4rem; font-size: .85rem; color: var(--muted); cursor: pointer; user-select: none; }
+.toggle input { accent-color: var(--accent); }
 .thr-group {
   display: inline-flex;
   background: var(--surface);
