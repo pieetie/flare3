@@ -292,9 +292,46 @@ td.seq { font-family: inherit; text-align: left; }
 .dimer-dg { font-weight: 400; color: var(--muted); opacity: .8; }
 .dimer-dg.bad { color: var(--ko-text); opacity: 1; font-weight: 600; }
 
-.thresholds { display: flex; gap: 1rem; flex-wrap: wrap; }
-.thresholds .thr { max-width: 11rem; }
-.thresholds input { width: 5rem; }
+.thresholds { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.thr-group {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.thr-group .thr {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .35rem;
+  margin: 0;
+  padding: .4rem .75rem;
+  max-width: none;
+}
+.thr-group .thr + .thr { border-left: 1px solid var(--border); }
+.thr-group .thr span { color: var(--muted); font-size: .8rem; }
+.thr-group input {
+  width: 2.75rem;
+  border: none;
+  background: transparent;
+  padding: .1rem 0;
+  text-align: right;
+  font-weight: 600;
+  color: var(--text);
+  touch-action: none;
+}
+.thr-group input:focus { outline: none; box-shadow: none; }
+.thr-group input.scrubbing { user-select: none; cursor: ns-resize; }
+.thr-group input[type="number"]::-webkit-inner-spin-button,
+.thr-group input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.thr-group input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
 
 .tree, .tree .node-body { margin: 0; padding-left: 0; list-style: none; font-size: .85rem; }
 .tree .node-body { display: none; padding-left: 1.1rem; }

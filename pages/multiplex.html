@@ -6,12 +6,16 @@
       <textarea id="seqs" rows="10" spellcheck="false"></textarea>
     </label>
     <div class="thresholds">
-      <label class="thr">Mid binding fail ≤
-        <input id="thr-mid" type="number" step="0.1" value="-4">
-      </label>
-      <label class="thr">3' end binding fail ≤
-        <input id="thr-end" type="number" step="0.1" value="-4">
-      </label>
+      <div class="thr-group">
+        <label class="thr">
+          <span>Mid</span>
+          <input id="thr-mid" type="number" step="0.1" value="-4">
+        </label>
+        <label class="thr">
+          <span>3′ end</span>
+          <input id="thr-end" type="number" step="0.1" value="-4">
+        </label>
+      </div>
     </div>
     <div class="actions">
       <button id="mux-run" type="button">Cross ΔG matrix</button>

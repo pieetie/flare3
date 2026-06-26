@@ -165,8 +165,49 @@ window.MULTIPLEX = (function () {
     // re-threshold without recompute when the inputs change
     for (const id of ["thr-mid", "thr-end"]) {
       const el = document.getElementById(id);
-      if (el) el.addEventListener("change", () => { if (lastM) paint(lastOligos, lastM); });
+      if (!el) continue;
+      el.addEventListener("change", () => { if (lastM) paint(lastOligos, lastM); });
+      attachScrub(el);
     }
+  }
+
+  function attachScrub(el) {
+    const PX_PER_STEP = 5;
+    let startY = 0, startVal = 0, dragging = false, moved = false;
+
+    el.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      dragging = true;
+      moved = false;
+      startY = e.clientY;
+      startVal = parseFloat(el.value) || 0;
+      el.setPointerCapture(e.pointerId);
+      el.classList.add("scrubbing");
+    });
+
+    el.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const dy = startY - e.clientY;
+      if (Math.abs(dy) > 2) moved = true;
+      const step = parseFloat(el.step) || 1;
+      const next = startVal + Math.round(dy / PX_PER_STEP) * step;
+      const str = next.toFixed(1);
+      if (str !== el.value) {
+        el.value = str;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      e.preventDefault();
+    });
+
+    const end = (e) => {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove("scrubbing");
+      try { el.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (moved) el.blur();
+    };
+    el.addEventListener("pointerup", end);
+    el.addEventListener("pointercancel", end);
   }
 
   return { mount };
