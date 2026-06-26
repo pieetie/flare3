@@ -6,32 +6,8 @@ window.FLARE = (function () {
 
   async function loadEngine() {
     try {
-      const pyodide = await loadPyodide();
-      const src = await fetch("flare/flare_compat.py").then((r) => {
-        if (!r.ok) throw new Error("flare/flare_compat.py not found (submodule initialized?)");
-        return r.text();
-      });
-      pyodide.FS.writeFile("flare_compat.py", src);
-      pyodide.runPython(`
-import json, flare_compat
-def _run(left, right, probe):
-    oligos = {}
-    if left:
-        oligos["left"] = flare_compat.analyze(left)
-    if right:
-        oligos["right"] = flare_compat.analyze(right)
-    if probe:
-        oligos["probe"] = flare_compat.analyze(probe)
-    cross = {}
-    if left and right:
-        cross["Left / Right"] = flare_compat.cross_dimer(left, right)
-    if left and probe:
-        cross["Left / Probe"] = flare_compat.cross_dimer(left, probe)
-    if right and probe:
-        cross["Right / Probe"] = flare_compat.cross_dimer(right, probe)
-    return json.dumps({"oligos": oligos, "cross_dimers": cross})
-`);
-      runAssay = pyodide.globals.get("_run");
+      const py = await window.flareEngine.load();
+      runAssay = py.globals.get("_run");
       ready = true;
     } catch (e) {
       errorMsg = e.message;
