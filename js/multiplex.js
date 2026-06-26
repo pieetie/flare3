@@ -68,7 +68,7 @@ window.MULTIPLEX = (function () {
       for (const x of bad) { addEntry(x.a, x.b, x.p); addEntry(x.b, x.a, x.p); }
 
       const svs = [...tree.keys()].sort((p, q) => svNum(p) - svNum(q));
-      html += `<p class="muted">${bad.length} pair${bad.length === 1 ? "" : "s"} above threshold.</p>`;
+      html += `<p class="muted">${bad.length} pair${bad.length === 1 ? "" : "s"} above threshold</p>`;
       html += '<ul class="tree">';
       for (const sv of svs) {
         const oligos = [...tree.get(sv).keys()].sort((p, q) => oligoNum(p) - oligoNum(q));
@@ -91,7 +91,7 @@ window.MULTIPLEX = (function () {
       }
       html += "</ul>";
     } else {
-      html += '<p class="muted">None above threshold.</p>';
+      html += '<p class="muted">None above threshold</p>';
     }
 
     html += `<h2>Cross-dimer ΔG matrix (${n}×${n}, flare) ` +
@@ -241,11 +241,11 @@ window.MULTIPLEX = (function () {
     if (!(size >= 2)) size = 5;
     const { svList, conf, worst } = svConflicts(oligos, M, tMid, tEnd);
     if (svList.length < 2) {
-      out.innerHTML = '<p class="err">Need at least 2 named groups (e.g. Seq1.1, Seq2.1).</p>';
+      out.innerHTML = '<p class="err">Need at least 2 named groups (e.g. Seq1.1, Seq2.1)</p>';
       return;
     }
     const avoidEl = document.getElementById("grp-avoid");
-    const avoid = avoidEl && avoidEl.checked;
+    const avoid = avoidEl && avoidEl.getAttribute("aria-pressed") === "true";
     const sol = avoid ? packGrowing(svList.length, conf, size)
                       : packFixed(svList.length, conf, size);
     const placed = svList.length - sol.dropped.length;
@@ -253,7 +253,7 @@ window.MULTIPLEX = (function () {
     let html = `<h2>Groups (≤ ${size})</h2>`;
     html += `<p class="muted">${sol.groups.length} group${sol.groups.length === 1 ? "" : "s"}` +
       ` (${placed}/${svList.length} placed` +
-      (sol.dropped.length ? `, ${sol.dropped.length} to redesign).</p>` : ").</p>");
+      (sol.dropped.length ? `, ${sol.dropped.length} to redesign)</p>` : ")</p>");
 
     sol.groups.forEach((g, gi) => {
       const members = g.map((u) => svList[u]);
@@ -316,10 +316,12 @@ window.MULTIPLEX = (function () {
     const out = document.getElementById("mux-results");
     const oligos = parseSeqs(document.getElementById("seqs").value);
     if (oligos.length < 2) {
-      out.innerHTML = '<p class="err">Enter at least 2 oligos (name sequence per line).</p>';
+      out.innerHTML = '<p class="err">Enter at least 2 oligos (name sequence per line)</p>';
       return;
     }
     lastView = view;
+    const avEl = document.getElementById("grp-avoid");
+    if (avEl) avEl.classList.toggle("visible", view === "groups");
     out.innerHTML = '<p class="muted">Loading flare…</p>';
     try {
       await ensure(oligos);
@@ -343,7 +345,11 @@ window.MULTIPLEX = (function () {
       attachScrub(el);
     }
     const av = document.getElementById("grp-avoid");
-    if (av) av.addEventListener("change", rerender);
+    if (av) av.addEventListener("click", () => {
+      const pressed = av.getAttribute("aria-pressed") === "true";
+      av.setAttribute("aria-pressed", String(!pressed));
+      if (lastView === "groups") rerender();
+    });
   }
 
   function attachScrub(el) {

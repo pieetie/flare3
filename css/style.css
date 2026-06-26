@@ -239,7 +239,9 @@ button:hover { background: var(--accent-hover); }
 button:active { transform: scale(0.98); }
 button:disabled { background: #d2d2d7; color: #fff; cursor: not-allowed; transform: none; }
 
-.actions { display: flex; gap: .6rem; }
+.actions { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.actions .toggle { margin-left: auto; display: none; }
+.actions .toggle.visible { display: inline-flex; }
 .btn-secondary {
   background: var(--surface);
   color: var(--text);
@@ -293,8 +295,29 @@ td.seq { font-family: inherit; text-align: left; }
 .dimer-dg.bad { color: var(--ko-text); opacity: 1; font-weight: 600; }
 
 .thresholds { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
-.toggle { display: inline-flex; align-items: center; gap: .4rem; font-size: .85rem; color: var(--muted); cursor: pointer; user-select: none; }
-.toggle input { accent-color: var(--accent); }
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  font-size: .9rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: calc(.6rem - 1px) 1.4rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.toggle:hover { background: #ececef; border-color: var(--border-strong); color: var(--text); }
+.toggle[aria-pressed="true"] {
+  background: var(--ring);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.toggle[aria-pressed="true"]:hover { background: var(--ring); border-color: var(--accent); color: var(--accent); }
 .thr-group {
   display: inline-flex;
   background: var(--surface);
@@ -306,15 +329,16 @@ td.seq { font-family: inherit; text-align: left; }
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: .35rem;
+  gap: .3rem;
   margin: 0;
-  padding: .4rem .75rem;
+  padding: .4rem .6rem;
   max-width: none;
 }
+.thr-group .thr:has(#grp-size) { justify-content: flex-start; gap: .3rem; }
 .thr-group .thr + .thr { border-left: 1px solid var(--border); }
 .thr-group .thr span { color: var(--muted); font-size: .8rem; }
 .thr-group input {
-  width: 2.75rem;
+  width: 2rem;
   border: none;
   background: transparent;
   padding: .1rem 0;
