@@ -126,47 +126,180 @@ window.MULTIPLEX = (function () {
     });
   }
 
-  let lastOligos = null, lastM = null;
+  let lastOligos = null, lastM = null, lastKey = null, lastView = "matrix";
 
-  async function compute(oligos) {
+  function shuffle(arr, rnd) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rnd() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  function mulberry32(seed) {
+    return function () {
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function svConflicts(oligos, M, tMid, tEnd) {
+    const svList = [];
+    const idx = new Map();
+    for (const o of oligos) {
+      const sv = svOf(o.name);
+      if (!idx.has(sv)) { idx.set(sv, 0); svList.push(sv); }
+    }
+    svList.sort((p, q) => svNum(p) - svNum(q));
+    idx.clear();
+    svList.forEach((s, i) => idx.set(s, i));
+    const m = svList.length;
+    const conf = Array.from({ length: m }, () => new Array(m).fill(false));
+    const worst = new Map();
+    const n = oligos.length;
+    for (let i = 0; i < n; i++)
+      for (let j = i + 1; j < n; j++) {
+        const sa = svOf(oligos[i].name), sb = svOf(oligos[j].name);
+        if (sa === sb || !fails(M[i][j], tMid, tEnd)) continue;
+        const x = idx.get(sa), y = idx.get(sb);
+        conf[x][y] = conf[y][x] = true;
+        const key = x < y ? x + "|" + y : y + "|" + x;
+        const rec = { a: oligos[i].name, b: oligos[j].name, p: M[i][j] };
+        const cur = worst.get(key);
+        if (!cur || rec.p.dg < cur.p.dg) worst.set(key, rec);
+      }
+    return { svList, conf, worst };
+  }
+
+  function packGroups(m, conf, size) {
+    const rnd = mulberry32(12345);
+    const base = [...Array(m).keys()];
+    let best = { groups: [] };
+    for (let r = 0; r < 4000; r++) {
+      const order = r === 0 ? base.slice() : shuffle(base.slice(), rnd);
+      const avail = new Set(order);
+      const groups = [];
+      while (true) {
+        const g = [];
+        for (const s of order) {
+          if (avail.has(s) && g.every((q) => !conf[s][q])) {
+            g.push(s);
+            if (g.length === size) break;
+          }
+        }
+        if (g.length === size) { groups.push(g); g.forEach((s) => avail.delete(s)); }
+        else break;
+      }
+      if (groups.length > best.groups.length) best = { groups };
+    }
+    const used = new Set(best.groups.flat());
+    best.dropped = base.filter((i) => !used.has(i));
+    return best;
+  }
+
+  function paintGroups(oligos, M) {
     const out = document.getElementById("mux-results");
-    out.innerHTML = '<p class="muted">Loading flare…</p>';
-    let py;
-    try {
-      py = await window.flareEngine.load();
-    } catch (e) {
-      out.innerHTML = '<p class="err">flare engine failed: ' + esc(e.message) + "</p>";
+    const tMid = thr("thr-mid", -4), tEnd = thr("thr-end", -4);
+    let size = parseInt(document.getElementById("grp-size").value, 10);
+    if (!(size >= 2)) size = 5;
+    const { svList, conf, worst } = svConflicts(oligos, M, tMid, tEnd);
+    if (svList.length < 2) {
+      out.innerHTML = '<p class="err">Need at least 2 named groups (e.g. Seq1.1, Seq2.1).</p>';
       return;
     }
-    const seqs = oligos.map((o) => o.seq);
-    const res = JSON.parse(py.globals.get("_crossmatrix")(JSON.stringify(seqs)));
+    const sol = packGroups(svList.length, conf, size);
+
+    let html = `<h2>Groups of ${size}</h2>`;
+    html += `<p class="muted">${sol.groups.length} group${sol.groups.length === 1 ? "" : "s"}` +
+      ` (${sol.groups.length * size}/${svList.length} placed` +
+      (sol.dropped.length ? `, ${sol.dropped.length} to redesign).</p>` : ").</p>");
+
+    sol.groups.forEach((g, gi) => {
+      const members = g.map((u) => svList[u]);
+      let wd = null;
+      for (let i = 0; i < g.length; i++)
+        for (let j = i + 1; j < g.length; j++) {
+          const k = g[i] < g[j] ? g[i] + "|" + g[j] : g[j] + "|" + g[i];
+          const rec = worst.get(k);
+          if (rec && (wd === null || rec.p.dg < wd)) wd = rec.p.dg;
+        }
+      const note = wd === null ? "no failing cross-dimers" : `worst ΔG ${wd.toFixed(1)} (ok)`;
+      html += `<div class="group"><div class="group-h">Group ${gi + 1} ` +
+        `<span class="muted">${esc(members.join(", "))}</span></div>` +
+        `<div class="group-sub muted">${note}</div></div>`;
+    });
+
+    if (sol.dropped.length) {
+      html += "<h2>To redesign</h2>";
+      for (const u of sol.dropped) {
+        const sv = svList[u];
+        const clashes = [];
+        for (let v = 0; v < svList.length; v++) {
+          if (v === u || !conf[u][v]) continue;
+          const k = u < v ? u + "|" + v : v + "|" + u;
+          clashes.push({ other: svList[v], rec: worst.get(k) });
+        }
+        clashes.sort((a, b) => a.rec.p.dg - b.rec.p.dg);
+        html += `<div class="group"><div class="group-h">${esc(sv)} ` +
+          `<span class="muted">clashes with ${clashes.length}</span></div>`;
+        html += '<ul class="group-dimers">' + clashes.slice(0, 8).map((c) =>
+          `<li>${esc(sv)} / ${esc(c.other)} — ${esc(c.rec.a)} ↔ ${esc(c.rec.b)} ` +
+          `<span class="dimer-dg">ΔG ${c.rec.p.dg.toFixed(1)}</span></li>`).join("") + "</ul></div>";
+      }
+    }
+    out.innerHTML = html;
+  }
+
+  async function ensure(oligos) {
+    const key = JSON.stringify(oligos.map((o) => o.seq));
+    if (lastM && key === lastKey) return lastM;
+    const py = await window.flareEngine.load();
+    const res = JSON.parse(py.globals.get("_crossmatrix")(JSON.stringify(oligos.map((o) => o.seq))));
     const n = oligos.length;
     const M = Array.from({ length: n }, () => new Array(n).fill(null));
     for (const [i, j, mid, end, dg, ascii] of res) {
       M[i][j] = { mid, end, dg, ascii };
       M[j][i] = { mid, end, dg, ascii };
     }
-    lastOligos = oligos; lastM = M;
-    paint(oligos, M);
+    lastKey = key; lastM = M; lastOligos = oligos;
+    return M;
+  }
+
+  function rerender() {
+    if (!lastM) return;
+    if (lastView === "groups") paintGroups(lastOligos, lastM);
+    else paint(lastOligos, lastM);
+  }
+
+  async function show(view) {
+    const out = document.getElementById("mux-results");
+    const oligos = parseSeqs(document.getElementById("seqs").value);
+    if (oligos.length < 2) {
+      out.innerHTML = '<p class="err">Enter at least 2 oligos (name sequence per line).</p>';
+      return;
+    }
+    lastView = view;
+    out.innerHTML = '<p class="muted">Loading flare…</p>';
+    try {
+      await ensure(oligos);
+    } catch (e) {
+      out.innerHTML = '<p class="err">flare engine failed: ' + esc(e.message) + "</p>";
+      return;
+    }
+    rerender();
   }
 
   function mount() {
-    const btn = document.getElementById("mux-run");
-    if (!btn) return;
-    btn.addEventListener("click", () => {
-      const oligos = parseSeqs(document.getElementById("seqs").value);
-      if (oligos.length < 2) {
-        document.getElementById("mux-results").innerHTML =
-          '<p class="err">Enter at least 2 oligos (name sequence per line).</p>';
-        return;
-      }
-      compute(oligos);
-    });
-    // re-threshold without recompute when the inputs change
-    for (const id of ["thr-mid", "thr-end"]) {
+    const run = document.getElementById("mux-run");
+    if (!run) return;
+    run.addEventListener("click", () => show("matrix"));
+    const grp = document.getElementById("mux-group");
+    if (grp) grp.addEventListener("click", () => show("groups"));
+    for (const id of ["thr-mid", "thr-end", "grp-size"]) {
       const el = document.getElementById(id);
       if (!el) continue;
-      el.addEventListener("change", () => { if (lastM) paint(lastOligos, lastM); });
+      el.addEventListener("change", rerender);
       attachScrub(el);
     }
   }
@@ -190,8 +323,11 @@ window.MULTIPLEX = (function () {
       const dy = startY - e.clientY;
       if (Math.abs(dy) > 2) moved = true;
       const step = parseFloat(el.step) || 1;
-      const next = startVal + Math.round(dy / PX_PER_STEP) * step;
-      const str = next.toFixed(1);
+      let next = startVal + Math.round(dy / PX_PER_STEP) * step;
+      const min = parseFloat(el.min);
+      if (!isNaN(min)) next = Math.max(min, next);
+      const dec = String(el.step).indexOf(".") >= 0 ? 1 : 0;
+      const str = next.toFixed(dec);
       if (str !== el.value) {
         el.value = str;
         el.dispatchEvent(new Event("change", { bubbles: true }));
