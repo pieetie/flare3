@@ -287,6 +287,10 @@ td.seq { font-family: inherit; text-align: left; }
 .verdict.ok { background: var(--ok-bg); color: var(--ok-text); }
 .verdict.ko { background: var(--ko-bg); color: var(--ko-text); }
 .err { color: var(--ko-text); font-size: .9rem; }
+
+.prep-out { display: block; width: 100%; box-sizing: border-box; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .85rem; resize: vertical; margin-bottom: .75rem; }
+.prep-warn { margin: .25rem 0 .75rem; padding-left: 1.1rem; font-size: .85rem; color: var(--ko-text); }
+.prep-warn li { margin: .1rem 0; }
 .muted { color: var(--muted); font-size: .85rem; }
 
 .dimer { margin: .75rem 0; }
