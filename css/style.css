@@ -190,7 +190,51 @@ textarea:focus, input:focus {
   box-shadow: 0 0 0 4px var(--ring);
 }
 
-#seqs { resize: vertical; }
+#seqs, #design-seq, #raw { resize: vertical; }
+
+/* Highlight overlay: backdrop renders the same text with <mark> behind the
+   textarea (transparent bg) so excluded regions show in yellow. Both layers
+   MUST share identical box metrics for the text to line up. */
+.hl-wrap { position: relative; }
+.hl-wrap .hl-backdrop,
+.hl-wrap #design-seq {
+  margin: 0;
+  font-family: inherit;
+  font-size: .9rem;
+  line-height: 1.4;
+  padding: .6rem .7rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+.hl-wrap .hl-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--surface);
+  border-color: var(--border);
+  color: transparent;
+  pointer-events: none;
+}
+.hl-wrap #design-seq {
+  position: relative;
+  background: transparent;
+  color: var(--text);
+}
+.hl-wrap .hl-backdrop mark {
+  background: #ffe066;
+  color: transparent;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.hl-wrap .hl-backdrop mark.bp { background: #ff9d7a; }
 #left, #right, #probe {
   resize: none;
   white-space: nowrap;
@@ -242,6 +286,44 @@ button:disabled { background: #d2d2d7; color: #fff; cursor: not-allowed; transfo
 .actions { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
 .actions .toggle { margin-left: auto; display: none; }
 .actions .toggle.visible { display: inline-flex; }
+.seg { display: inline-flex; gap: .4rem; margin-bottom: .75rem; }
+
+.design-row { display: flex; gap: .9rem; align-items: flex-end; }
+.design-row .grow { flex: 1; }
+.design-row .delta-field, .design-row .bp-field { flex: 0 0 7rem; width: 7rem; }
+.design-row .delta-field input, .design-row .bp-field input { width: 100%; }
+.design-row .delta-field input { cursor: ns-resize; }
+.design-row .delta-field input.scrubbing { user-select: none; }
+.design-row .delta-field input[type="number"]::-webkit-inner-spin-button,
+.design-row .delta-field input[type="number"]::-webkit-outer-spin-button,
+.design-row .bp-field input[type="number"]::-webkit-inner-spin-button,
+.design-row .bp-field input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.design-row .delta-field input[type="number"],
+.design-row .bp-field input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+/* One card per candidate for clear visual separation. */
+.cand {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: .7rem .9rem;
+  margin-bottom: .9rem;
+}
+.cand-head { display: flex; align-items: center; gap: .65rem; margin-bottom: .55rem; }
+.cand-n { font-weight: 700; }
+.cand-head .muted { color: var(--muted); font-size: .8rem; }
+.cand-tbl { width: 100%; }
+
+.loading { display: flex; align-items: center; gap: .6rem; color: var(--muted); padding: .6rem 0; }
+.spinner {
+  width: 1rem; height: 1rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .btn-secondary {
   background: var(--surface);
   color: var(--text);
