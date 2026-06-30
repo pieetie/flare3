@@ -2,6 +2,7 @@
 (function () {
   const view = document.getElementById("view");
   const routes = {
+    design: "pages/design.html",
     flare: "pages/flare.html",
     prepare: "pages/prepare.html",
     multiplex: "pages/multiplex.html",
@@ -20,6 +21,7 @@
     }
 
     if (window.flarePersist) window.flarePersist();
+    if (route === "design" && window.DESIGN) window.DESIGN.mount();
     if (route === "flare" && window.FLARE) window.FLARE.mount();
     if (route === "prepare" && window.PREPARE) window.PREPARE.mount();
     if (route === "multiplex" && window.MULTIPLEX) window.MULTIPLEX.mount();
