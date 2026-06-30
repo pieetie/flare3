@@ -1,3 +1,6 @@
 [submodule "flare"]
 	path = flare
 	url = https://github.com/pieetie/flare.git
+[submodule "primer3-wasm"]
+	path = primer3-wasm
+	url = https://github.com/pieetie/primer3-wasm.git
