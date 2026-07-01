@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.0 (2026-07-01)
+
+* New design page : primer3 TaqMan design (left/right primer + probe) in the browser via primer3-wasm
+* Three parameter sets : flare (custom tuning), flare relaxed (wider primer3 ranges), and primer3 default
+* flare modes recombine primer3 left/right pools and enumerate probe candidates with flare thermodynamics, primer3 default returns native pairs scored by flare
+* Breakpoint target, excluded regions (highlighted on the template), and adjustable ΔG threshold with live verdict filtering
+
 ## v0.2.0 (2026-06-29)
 
 * New prepare page 
