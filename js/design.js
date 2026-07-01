@@ -143,7 +143,7 @@ window.DESIGN = (function () {
     const seq = clean(document.getElementById("design-seq").value);
     const ex = (document.getElementById("design-excluded").value || "").trim();
     const bp = (document.getElementById("design-breakpoint").value || "").trim();
-    return seq + " | " + ex + " | " + bp;
+    return seq + " | " + ex + " | " + bp + " | " + currentDelta();
   }
   function currentDelta() {
     const d = parseFloat(document.getElementById("design-delta").value);
@@ -195,7 +195,7 @@ window.DESIGN = (function () {
     bd.scrollLeft = ta.scrollLeft;
   }
 
-  function buildInput(seq, excluded, breakpoint, mode) {
+  function buildInput(seq, excluded, breakpoint, mode, overrides) {
     const params = {
       SEQUENCE_ID: "flare-design",
       SEQUENCE_TEMPLATE: seq,
@@ -218,6 +218,7 @@ window.DESIGN = (function () {
     // relaxed = custom params plus widened ranges
     Object.assign(params, PARAM_SETS[mode === "relaxed" ? "custom" : mode] || {});
     if (mode === "relaxed") Object.assign(params, RELAXED);
+    if (overrides) Object.assign(params, overrides);
     const lines = Object.entries(params).map(([k, v]) => k + "=" + v);
     lines.push("=");
     return lines.join("\n") + "\n";
@@ -276,6 +277,81 @@ window.DESIGN = (function () {
     }
   }
 
+  // native primer3 pairs, scored by flare (used by primer3 default mode)
+  async function runNative(seq, excluded, breakpoint, mode) {
+    const map = parse(await designFn(buildInput(seq, excluded, breakpoint, mode)));
+    if (map.PRIMER_ERROR) throw new Error(map.PRIMER_ERROR);
+    const cands = candidates(map);
+    if (cands.length) {
+      progress("Scoring " + cands.length + " candidates with flare...");
+      await nextFrame();
+      await scoreThermo(cands);
+    }
+    return cands;
+  }
+
+  // harvest the distinct left/right/probe candidates from primer3 pair output
+  // (native pairs already flank the junction, so recombining them stays valid)
+  function poolsFromPairs(map) {
+    const n = parseInt(map.PRIMER_PAIR_NUM_RETURNED || "0", 10);
+    const grab = (kind) => {
+      const seen = new Map();
+      for (let i = 0; i < n; i++) {
+        const s = map[`PRIMER_${kind}_${i}_SEQUENCE`];
+        if (!s || seen.has(s)) continue;
+        const pos = (map[`PRIMER_${kind}_${i}`] || "").split(",");
+        seen.set(s, {
+          seq: s,
+          start: parseInt(pos[0], 10),
+          len: parseInt(pos[1], 10),
+          pen: parseFloat(map[`PRIMER_${kind}_${i}_PENALTY`]) || 0,
+          tm: parseFloat(map[`PRIMER_${kind}_${i}_TM`]),
+        });
+      }
+      return [...seen.values()];
+    };
+    return { Ls: grab("LEFT"), Rs: grab("RIGHT"), Ps: grab("INTERNAL") };
+  }
+
+  // mixing modes: primer3 gives left/right pools, flare enumerates + scores probes
+  async function runMix(seq, excluded, breakpoint, mode) {
+    const NUM = 300, CAP = 60, TOP = 40;
+    const relaxed = mode === "relaxed";
+    progress("Designing pool...");
+    await nextFrame();
+    const map = parse(
+      await designFn(buildInput(seq, excluded, breakpoint, mode, { PRIMER_NUM_RETURN: String(NUM) }))
+    );
+    if (map.PRIMER_ERROR) throw new Error(map.PRIMER_ERROR);
+    const byPen = (a, b) => a.pen - b.pen;
+    const pools = poolsFromPairs(map);
+    const pack = (o) => [o.seq, o.start, o.len, o.pen, o.tm];
+    const Ls = pools.Ls.sort(byPen).slice(0, CAP).map(pack);
+    const Rs = pools.Rs.sort(byPen).slice(0, CAP).map(pack);
+    if (!Ls.length || !Rs.length) return [];
+    const j = parseInt(breakpoint, 10);
+    const payload = {
+      template: seq,
+      j: isNaN(j) ? 0 : j,
+      ghosts: parseExcluded(excluded).map((r) => [r.start, r.end - r.start + 1]),
+      lefts: Ls,
+      rights: Rs,
+      size_min: 80, size_max: 200,
+      plen_min: relaxed ? 17 : 18,
+      plen_max: relaxed ? 30 : 27,
+      ptm_min: relaxed ? 54 : 57,
+      ptm_max: relaxed ? 68 : 63,
+      pgc_min: 20, pgc_max: 80, ppolyx: 5,
+      delta: currentDelta(),
+      top: TOP,
+    };
+    progress("Enumerating probes and scoring with flare...");
+    await nextFrame();
+    const py = await window.flareEngine.load();
+    const mix = py.globals.get("_mix");
+    return JSON.parse(mix(JSON.stringify(payload)));
+  }
+
   function render(pool, delta) {
     const out = document.getElementById("design-results");
     if (!pool.length) {
@@ -289,7 +365,7 @@ window.DESIGN = (function () {
         "Loosen the ΔG threshold, try relaxed, or switch parameter set.</p>";
       return;
     }
-    const MAX_SHOW = 10;
+    const MAX_SHOW = 15;
     const shown = passing.slice(0, MAX_SHOW);
     let html =
       `<h2>${passing.length} thermo-ok candidate${passing.length === 1 ? "" : "s"} ` +
@@ -304,6 +380,8 @@ window.DESIGN = (function () {
       html +=
         `<div class="cand-head"><span class="cand-n">#${i + 1}</span>` +
         `<span class="verdict ok">ΔG ${fmt(c.worst)}</span>` +
+        (c.prod ? `<span class="muted">${c.prod} bp</span>` : "") +
+        (c.pen != null ? `<span class="muted">pen ${c.pen.toFixed(2)}</span>` : "") +
         `<span class="muted">limiting: ${esc(c.worstLabel)}</span></div>`;
       html +=
         '<table class="cand-tbl"><thead><tr><th>Oligo</th><th>Sequence</th>' +
@@ -401,17 +479,11 @@ window.DESIGN = (function () {
     try {
       await load();
       await nextFrame();
-      const map = parse(await designFn(buildInput(seq, excluded, breakpoint, mode)));
-      if (map.PRIMER_ERROR) {
-        out.innerHTML = '<p class="err">' + esc(map.PRIMER_ERROR) + "</p>";
-        return;
-      }
-      const cands = candidates(map);
-      if (cands.length) {
-        progress("Scoring " + cands.length + " candidates with flare…");
-        await nextFrame();
-        await scoreThermo(cands);
-      }
+      // primer3 default = native pairs, flare / flare relaxed = recombination
+      const cands =
+        mode === "default"
+          ? await runNative(seq, excluded, breakpoint, mode)
+          : await runMix(seq, excluded, breakpoint, mode);
       cache[mode] = { key, cands };
       lastCands = cands;
       render(cands, currentDelta());
