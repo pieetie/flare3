@@ -286,7 +286,8 @@ button:disabled { background: #d2d2d7; color: #fff; cursor: not-allowed; transfo
 .actions { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
 .actions .toggle { margin-left: auto; display: none; }
 .actions .toggle.visible { display: inline-flex; }
-.seg { display: inline-flex; gap: .4rem; margin-bottom: .75rem; }
+.seg { display: inline-flex; gap: .4rem; margin-bottom: .75rem; flex-wrap: wrap; }
+.seg-hint { margin: -.4rem 0 .9rem; font-size: .8rem; color: var(--muted); line-height: 1.4; }
 
 .design-row { display: flex; gap: .9rem; align-items: flex-end; }
 .design-row .grow { flex: 1; }

@@ -70,11 +70,26 @@ window.DESIGN = (function () {
     },
   };
 
+  // relaxed widening applied on top when the relaxed toggle is on
+  const RELAXED = {
+    PRIMER_MIN_TM: "54",
+    PRIMER_MAX_TM: "66",
+    PRIMER_MIN_SIZE: "17",
+    PRIMER_MAX_SIZE: "30",
+    PRIMER_MIN_GC: "25",
+    PRIMER_MAX_GC: "80",
+    PRIMER_MAX_POLY_X: "5",
+    PRIMER_INTERNAL_MIN_TM: "54",
+    PRIMER_INTERNAL_MAX_TM: "68",
+    PRIMER_INTERNAL_MIN_SIZE: "17",
+    PRIMER_INTERNAL_MAX_SIZE: "30",
+  };
+
   let designFn = null;
   let loading = null;
   let lastCands = null; 
 
-  const cache = { default: null, custom: null };
+  const cache = { default: null, custom: null, relaxed: null };
 
   function status(msg) {
     const el = document.getElementById("design-status");
@@ -110,6 +125,18 @@ window.DESIGN = (function () {
   function currentMode() {
     const el = document.querySelector("#design-mode button:not(.btn-secondary)");
     return el ? el.dataset.mode : "custom";
+  }
+  // show a short note only when relaxed mode is active
+  function updateModeHint() {
+    const el = document.getElementById("design-mode-hint");
+    if (!el) return;
+    if (currentMode() === "relaxed") {
+      el.textContent =
+        "Relaxed widens the primer3 ranges (primers Tm 54-66, size 17-30, GC 25-80, poly-X 5; probe Tm 54-68, size 17-30) to find candidates when flare returns none. Thermo scoring is unchanged.";
+      el.style.display = "";
+    } else {
+      el.style.display = "none";
+    }
   }
 
   function inputKey() {
@@ -188,7 +215,9 @@ window.DESIGN = (function () {
       params.SEQUENCE_INTERNAL_EXCLUDED_REGION =
         bp + ",2" + (excluded ? " " + excluded : "");
     }
-    Object.assign(params, PARAM_SETS[mode] || {});
+    // relaxed = custom params plus widened ranges
+    Object.assign(params, PARAM_SETS[mode === "relaxed" ? "custom" : mode] || {});
+    if (mode === "relaxed") Object.assign(params, RELAXED);
     const lines = Object.entries(params).map(([k, v]) => k + "=" + v);
     lines.push("=");
     return lines.join("\n") + "\n";
@@ -253,18 +282,18 @@ window.DESIGN = (function () {
       out.innerHTML = '<p class="err">No primer pair found for this template.</p>';
       return;
     }
-    const passing = pool.filter((c) => c.worst !== null && c.worst > delta);
+    const passing = pool.filter((c) => c.worst !== null && c.worst >= delta);
     if (!passing.length) {
       out.innerHTML =
-        `<p class="err">No thermo-ok candidate: every design has ΔG ≤ ${delta}. ` +
-        "Loosen the ΔG threshold or try the other parameter set.</p>";
+        `<p class="err">No thermo-ok candidate: every design has ΔG &lt; ${delta}. ` +
+        "Loosen the ΔG threshold, try relaxed, or switch parameter set.</p>";
       return;
     }
     const MAX_SHOW = 10;
     const shown = passing.slice(0, MAX_SHOW);
     let html =
       `<h2>${passing.length} thermo-ok candidate${passing.length === 1 ? "" : "s"} ` +
-      `(ΔG &gt; ${delta})${passing.length > shown.length ? `, showing ${shown.length}` : ""}</h2>`;
+      `(ΔG &ge; ${delta})${passing.length > shown.length ? `, showing ${shown.length}` : ""}</h2>`;
     shown.forEach((c, i) => {
       const rows = [
         ["Left", c.L, c.tmL],
@@ -403,6 +432,7 @@ window.DESIGN = (function () {
       b.addEventListener("click", () => {
         if (!b.classList.contains("btn-secondary")) return; // already active
         for (const o of segs) o.classList.toggle("btn-secondary", o !== b);
+        updateModeHint();
         // show cached result if inputs match, else hide
         const out = document.getElementById("design-results");
         const c = cache[currentMode()];
@@ -415,6 +445,8 @@ window.DESIGN = (function () {
         }
       });
     }
+
+    updateModeHint();
 
     // highlight excluded in yellow and breakpoint in orange
     const ta = document.getElementById("design-seq");
@@ -439,7 +471,6 @@ window.DESIGN = (function () {
       delta.addEventListener("change", rerenderVerdicts);
       delta.addEventListener("input", rerenderVerdicts);
     }
-
     status("Loading primer3…");
     load()
       .then(() => {

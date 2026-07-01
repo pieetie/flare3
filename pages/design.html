@@ -4,9 +4,11 @@
 
   <form id="design-form">
     <div class="seg" id="design-mode" role="group" aria-label="Parameters">
-      <button type="button" data-mode="custom">flare custom</button>
+      <button type="button" data-mode="custom">flare</button>
+      <button type="button" class="btn-secondary" data-mode="relaxed">flare relaxed</button>
       <button type="button" class="btn-secondary" data-mode="default">primer3 default</button>
     </div>
+    <p class="seg-hint" id="design-mode-hint"></p>
 
     <label>Template sequence (5'→3')
       <div class="hl-wrap">
@@ -15,10 +17,10 @@
       </div>
     </label>
     <div class="design-row">
-      <label class="bp-field">Breakpoint (j)
+      <label class="bp-field">Breakpoint
         <input id="design-breakpoint" type="number" min="1" step="1" spellcheck="false">
       </label>
-      <label class="grow">Excluded region(s) - optional, format start,length (e.g. 101,3)
+      <label class="grow">Excluded region(s) (e.g. 101,3)
         <input id="design-excluded" type="text" spellcheck="false">
       </label>
       <label class="delta-field">ΔG
