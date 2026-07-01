@@ -199,9 +199,10 @@ textarea:focus, input:focus {
 .hl-wrap .hl-backdrop,
 .hl-wrap #design-seq {
   margin: 0;
-  font-family: inherit;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: .9rem;
   line-height: 1.4;
+  letter-spacing: 0;
   padding: .6rem .7rem;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
